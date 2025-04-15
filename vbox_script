@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+
+# Williams, Michael
+
+import os
+import subprocess
+
+YELLOW = '\033[93m'
+RED = '\033[91m'
+GREEN = '\033[92m'
+RESET = '\033[0m'
+def menu():
+	print(YELLOW + "  Welcome to VM Manager\n" + RESET + "\t[1] List VMs\n\t[2] Start a VM\n\t[3] Stop a VM\n\t[4] Create a VM\n\t[5] Delete a VM\n\t[6] VM Settings\n\t[7] Manage VM Snapshots")
+	
+def get_powered_off():
+	all_vms = subprocess.check_output("VBoxManage list vms", shell=True, text=True)
+	all_arr = all_vms.strip().splitlines()
+	running_vms = subprocess.check_output("VBoxManage list runningvms", shell=True, text=True)
+	run_arr = running_vms.strip().splitlines()
+	
+	powered_off = []
+	
+	for i in all_arr:
+		if i not in run_arr:
+			powered_off.append(i)
+	print("Powered Off Virtual Machines")
+	for vm in powered_off:
+		print(vm)
+	
+def user_choice(number):
+	if number == "1":
+		os.system("clear")
+		print("Current Virtual Machines:")
+		os.system("VBoxManage list vms")
+	elif number == "2":
+		get_powered_off()
+		
+		start_name = input("Enter name of VM you want to start: ")
+		try: 
+			if (start_name == ""):
+				print("Not Starting a VM")
+			else:
+				result = subprocess.run(["VBoxManage", "startvm", start_name], check=True,
+				                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				print(GREEN + start_name + " Started Successfully!" + RESET)
+		except subprocess.CalledProcessError:
+			print(RED + "ERROR " + RESET + "No VM Named " + start_name)
+	elif number == "3":
+		try:
+			print("Stopping a VM")
+			listvms = subprocess.check_output("VBoxManage list runningvms", shell=True, text=True)
+			print(listvms)
+			stop_name = input("Enter name of VM you want to stop: ")
+			if (stop_name == ""):
+				print("Not Stopping a VM")
+			else:
+				result = subprocess.run(["VBoxManage", "controlvm", stop_name, "poweroff"], check=True,
+				                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				print(GREEN + stop_name + " Stopped Successfully!" + RESET)
+		except subprocess.CalledProcessError:
+			print(RED + "ERROR " + RESET + "No VM Named " + stop_name)
+	elif number == "4":
+		print("Creating a VM")
+		
+		
+		create_name = input("Enter name of your Virtual Machine: ")
+		mem = input("Enter Memory Amount in megabytes (2gb = 2048): ")
+		storage_size = input("Enter Storage Amount in megabytes: ")
+		iso_path = input("Enter Path to Your ISO File (ex: /home/<user>/Downloads/image.iso): ")
+		
+		os.system("VBoxManage createvm --name " + create_name + " --register")
+		os.system("VBoxManage modifyvm " + create_name + " --memory " + mem + " --vram 128 --acpi on --boot1 dvd --nic1 nat")
+		
+		vdi_path = os.path.expanduser(f"~/VirtualBox VMs/{create_name}/{create_name}.vdi")
+		
+		os.system(f"VBoxManage createhd --filename \"{vdi_path}\" --size {storage_size}")
+		
+		os.system(f"VBoxManage storagectl \"{create_name}\" --name 'SATA Controller' --add sata --controller IntelAHCI")
+		
+		os.system(f"VBoxManage storageattach \"{create_name}\" --storagectl 'SATA Controller' --port 0 --device 0 --type hdd --medium \"{vdi_path}\"")
+
+		os.system(f"VBoxManage storageattach \"{create_name}\" --storagectl 'SATA Controller' --port 1 --device 0 --type dvddrive --medium \"{iso_path}\"")
+		
+		print(GREEN + "Virtual Machine " + create_name + " Created Successfully!" + RESET)
+		
+	elif number == "5":
+		os.system("VBoxManage list vms")
+		del_name = input("Enter name of VM you would like to " + RED + "DELETE" + RESET + ": ")
+		yes_no = input("Are you sure you want to " + RED + "DELETE " + RESET + "the Virtual Machine: " + del_name + " (y/n): ")
+		if yes_no == "y":
+			os.system("VBoxManage unregistervm " + del_name + " --delete-all")
+			print(GREEN + "Virtual Machine: " + del_name + " Deleted Successfully!" + RESET)
+		else:
+			print("Not Deleting Virtual Machine: " + del_name)
+		
+	elif number == "6":
+		print("Showing VM Settings")
+	elif number == "7":
+		print("Manage VM Snapshots")
+	else:
+		print("")
+		
+
+def main():
+	os.system("clear")
+	menu()
+	number = input("Enter your choice: ")
+	user_choice(number)
+	
+main()
+
+
