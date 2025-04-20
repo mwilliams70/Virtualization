@@ -4,9 +4,11 @@ VirtualBox Management Script
 
 
 ![image](https://github.com/user-attachments/assets/dc93e142-bc38-4748-88b4-a527945f33d8)
+
 Above is the menu shown when running 'python vbox_script'
 
 ![image](https://github.com/user-attachments/assets/274057f5-3068-49c2-98ed-b0553094834f)
+
 After choosing option 1, all VM's are printed
 
 ![image](https://github.com/user-attachments/assets/bfe89445-eb0b-425e-8dc1-1ce56893c053)
