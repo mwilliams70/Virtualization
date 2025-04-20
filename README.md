@@ -32,4 +32,8 @@ The 'test' Rocky Minimal VM is deleted with option 5
 ![image](https://github.com/user-attachments/assets/52a1e0d1-2539-4ec5-a50c-5089f537d510)
 When using option 6 to view a VM's settings, the VM's name, memory, NIC setting, ISO image, and snapshots are displayed
 
+![image](https://github.com/user-attachments/assets/60f7f69d-23ad-40f8-8b01-ec8f24a086c3)
+![image](https://github.com/user-attachments/assets/b59015fc-bfa8-4b27-b1b5-05d7881869a6)
+![image](https://github.com/user-attachments/assets/7497b5ab-22c8-4bed-87ed-a61eb50a0650)
 
+The above three images show the uses of option 7 in the menu to be able to manage the VM's snapshots
