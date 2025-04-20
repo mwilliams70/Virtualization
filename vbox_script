@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 # Williams, Michael
+# NSSA 244 Virtualization
+# VirtualBox Management Script
 
 import os
 import subprocess
@@ -9,9 +11,12 @@ YELLOW = '\033[93m'
 RED = '\033[91m'
 GREEN = '\033[92m'
 RESET = '\033[0m'
+
+# Prints the menu with options for the user
 def menu():
-	print(YELLOW + "  Welcome to VM Manager\n" + RESET + "\t[1] List VMs\n\t[2] Start a VM\n\t[3] Stop a VM\n\t[4] Create a VM\n\t[5] Delete a VM\n\t[6] VM Settings\n\t[7] Manage VM Snapshots")
-	
+	print(YELLOW + "  \n\nWelcome to VM Manager\n" + RESET + "\t[1] List VMs\n\t[2] Start a VM\n\t[3] Stop a VM\n\t[4] Create a VM\n\t[5] Delete a VM\n\t[6] VM Settings\n\t[7] Manage VM Snapshots\n\t[8] Exit")
+
+# Prints any VM's that are powered off	
 def get_powered_off():
 	all_vms = subprocess.check_output("VBoxManage list vms", shell=True, text=True)
 	all_arr = all_vms.strip().splitlines()
@@ -26,12 +31,17 @@ def get_powered_off():
 	print("Powered Off Virtual Machines")
 	for vm in powered_off:
 		print(vm)
-	
+
+# Handles the user's choice from the menu
 def user_choice(number):
+
+	# Prints all VM's currently on the machine
 	if number == "1":
 		os.system("clear")
 		print("Current Virtual Machines:")
 		os.system("VBoxManage list vms")
+		
+	# Shows all vms that are powered off and available to turn on
 	elif number == "2":
 		get_powered_off()
 		
@@ -45,6 +55,8 @@ def user_choice(number):
 				print(GREEN + start_name + " Started Successfully!" + RESET)
 		except subprocess.CalledProcessError:
 			print(RED + "ERROR " + RESET + "No VM Named " + start_name)
+		
+	# Shows all currently running VM's and turns off the chosen VM by the user	
 	elif number == "3":
 		try:
 			print("Stopping a VM")
@@ -59,16 +71,21 @@ def user_choice(number):
 				print(GREEN + stop_name + " Stopped Successfully!" + RESET)
 		except subprocess.CalledProcessError:
 			print(RED + "ERROR " + RESET + "No VM Named " + stop_name)
+		
+	# Creates a VM	
 	elif number == "4":
 		print("Creating a VM")
-		
 		
 		create_name = input("Enter name of your Virtual Machine: ")
 		mem = input("Enter Memory Amount in megabytes (2gb = 2048): ")
 		storage_size = input("Enter Storage Amount in megabytes: ")
+		
+		print("\n" + YELLOW + "Available ISO Images" + RESET)
+		os.system("ls -l Downloads | awk 'NR > 1 {print $NF}'")
+		
 		iso_path = input("Enter Path to Your ISO File (ex: /home/<user>/Downloads/image.iso): ")
 		
-		os.system("VBoxManage createvm --name " + create_name + " --register")
+		os.system("VBoxManage createvm --name " + create_name + ' --register')
 		os.system("VBoxManage modifyvm " + create_name + " --memory " + mem + " --vram 128 --acpi on --boot1 dvd --nic1 nat")
 		
 		vdi_path = os.path.expanduser(f"~/VirtualBox VMs/{create_name}/{create_name}.vdi")
@@ -83,29 +100,108 @@ def user_choice(number):
 		
 		print(GREEN + "Virtual Machine " + create_name + " Created Successfully!" + RESET)
 		
+	# Allows a user to delete a VM with a confirmation prompt
 	elif number == "5":
 		os.system("VBoxManage list vms")
-		del_name = input("Enter name of VM you would like to " + RED + "DELETE" + RESET + ": ")
-		yes_no = input("Are you sure you want to " + RED + "DELETE " + RESET + "the Virtual Machine: " + del_name + " (y/n): ")
-		if yes_no == "y":
-			os.system("VBoxManage unregistervm " + del_name + " --delete-all")
-			print(GREEN + "Virtual Machine: " + del_name + " Deleted Successfully!" + RESET)
-		else:
-			print("Not Deleting Virtual Machine: " + del_name)
+		del_name = input("Enter name of VM you would like to " + RED + "DELETE" + RESET + " or 'cancel' to quit: ")
 		
+		if del_name == "cancel":
+			print("Not Deleting a Virtual Machine")
+		else:
+			yes_no = input("Are you sure you want to " + RED + "DELETE " + RESET + "the Virtual Machine: " + del_name + " (y/n): ")
+			if yes_no == "y":
+				os.system("VBoxManage unregistervm " + del_name + " --delete-all")
+				print(GREEN + "Virtual Machine: " + del_name + " Deleted Successfully!" + RESET)
+			
+			else:
+				print("Not Deleting Virtual Machine: " + del_name)
+	
+	# Shows VM settings
 	elif number == "6":
 		print("Showing VM Settings")
+		os.system("VBoxManage list vms")
+		setting_vm = input("Enter name of Virtual Machine you would like to see configuration of: ")
+		try:
+			result = subprocess.run(["VBoxManage", "showvminfo", setting_vm], check=True, text=True,
+				                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			keywords = ["Name:", "Memory size:", "State:", "NIC 1 Settings:", ".iso"]
+			for line in result.stdout.splitlines():
+				if any(keyword in line for keyword in keywords):
+					print(line.strip())
+		except subprocess.CalledProcessError:
+			print(RED + "ERROR " + RESET + "No VM Named " + setting_vm)
+			
+	# Allows a user to take, list, or restore a snapshot	
 	elif number == "7":
 		print("Manage VM Snapshots")
+		os.system("VBoxManage list vms")  
+		vm_name = input("Enter name of Virtual Machine: ")
+
+		
+		check_vm = subprocess.run(["VBoxManage", "showvminfo", vm_name], text=True,
+					   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+		if check_vm.returncode != 0:  
+			print(RED + "ERROR " + RESET + "No VM Named " + vm_name)
+			#print(check_vm.stderr.strip())  
+		else:	
+			print("\t[1] Take a Snapshot\n\t[2] List Snapshots\n\t[3] Restore")
+			choice = input("Enter your choice: ")
+			
+			# Takes a snapshot of the chosen VM
+			if choice == "1":
+				snap_name = input("Enter snapshot name: ")
+				result = subprocess.run(["VBoxManage", "snapshot", vm_name, "take", snap_name], text=True,
+							 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				if result.returncode == 0:
+					if result.stdout.strip():
+						print(result.stdout)
+					else:
+						print(RED + "ERROR " + RESET + " snapshot failed to create")
+				else:
+					print(RED + "ERROR: " + RESET + result.stderr.strip())
+			
+			# Lists snapshots of the chosen VM
+			elif choice == "2":
+				result = subprocess.run(["VBoxManage", "snapshot", vm_name, "list"], text=True,
+				    			stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+				if result.returncode == 0:
+					if result.stdout.strip(): 
+						print(result.stdout)
+						
+					else:  
+						print(RED + "ERROR " + RESET + "This machine does not have any snapshots.")
+				else:
+					print(RED + "ERROR: " + RESET + vm_name + " does not have any snapshots.")
+					print(result.stderr.strip())
+			
+			# Restores a VM with the chosen snapshot
+			elif choice == "3":
+				subprocess.run(["VBoxManage", "snapshot", vm_name, "list"], text=True)
+				restore_name = input("Enter snapshot name to restore: ")
+				result = subprocess.run(["VBoxManage", "snapshot", vm_name, "restore", restore_name], text=True)
+				if result.returncode == 0:
+					print(GREEN + "VM RESTORED" + RESET)
+				else:
+					print(RED + "ERROR: " + RESET + vm_name + " does not have any snapshots.")
+					print(result.stderr.strip())
+				
+				
+	
 	else:
 		print("")
 		
-
 def main():
 	os.system("clear")
-	menu()
-	number = input("Enter your choice: ")
-	user_choice(number)
+	while True:
+		menu()
+		number = input("Enter your choice: ")
+		if number == "8":
+			print(GREEN + "GOODBYE!" + RESET)
+			break
+		else:	
+			user_choice(number)
 	
 main()
 
