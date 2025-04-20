@@ -25,7 +25,11 @@ The 'Alpine' VM is stopped after choosing option 3 and selecting 'Alpine'
 
 A new Rocky Minimal VM is created using option 4 in the menu
 
+![image](https://github.com/user-attachments/assets/6d6c3ee1-3fae-47b0-aff5-8a6da7a48ade)
 
+The 'test' Rocky Minimal VM is deleted with option 5
 
+![image](https://github.com/user-attachments/assets/52a1e0d1-2539-4ec5-a50c-5089f537d510)
+When using option 6 to view a VM's settings, the VM's name, memory, NIC setting, ISO image, and snapshots are displayed
 
 
