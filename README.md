@@ -23,7 +23,6 @@ The 'Alpine' VM is stopped after choosing option 3 and selecting 'Alpine'
 
 ![image](https://github.com/user-attachments/assets/d2b18621-d548-4a4d-8fc2-ac00832081fe)
 
-
 A new Rocky Minimal VM is created using option 4 in the menu
 
 
